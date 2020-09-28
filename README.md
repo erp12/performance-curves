@@ -8,6 +8,6 @@
 
 ### Running Tests
 
-```commandline
-tox -e 
+```shell script
+tox -e test-py36  # or test-py37 or test-py38
 ```
