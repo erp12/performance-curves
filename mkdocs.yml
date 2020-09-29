@@ -1,0 +1,40 @@
+site_name: Performance Curves
+#site_url:
+site_description: The ideal way to evaluate binary classifiers.
+site_author: Eddie Pantridge
+
+repo_url: https://github.com/erp12/performance-curves
+edit_uri: ""
+
+docs_dir: "docs_src"
+site_dir: "docs"
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: teal
+    accent: purple
+
+nav:
+  - Home: README.md
+  - API: api.md
+  - About:
+      - License: LICENSE.md
+
+# @todo examples.md
+# @todo release-notes.md
+# @todo CONTRIBUTING.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append("docs")
+          selection:
+            new_path_syntax: yes
+      watch:
+        - performance_curves
