@@ -21,3 +21,16 @@ of Python using the one of the variants.
 ```
 tox -e test-py36  # or test-py37 or test-py38
 ```
+
+### TODO:
+- [ ] Code a perfect model
+- [ ] Code a random model
+- [ ] Write a streaming metric (to help optimize efficiency of not repeating the computation multiple times)
+- [ ] Write plotting functions (allow user to compare multiple models)
+
+### Questions
+- Do we want to allow multiple metrics in the same `performance_curve` function?
+    - Pro: save computation time, since given the same model, no matter what the metric is, we still use the same `y_pred` and `y_score`
+- Do we want to allow multiple models in the same `performance_curve` function?
+    - Con: doesn't save any computation time (cause there's nothing to be reused across models)
+    
