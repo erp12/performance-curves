@@ -7,18 +7,23 @@ from performance_curves.utils import synchronize_sort
 
 class PerformanceCurve:
     """Stores values of the x- and y-axis of the performance curve and allows plotting"""
-    def __init__(self, cutoff, metric_value):
+    def __init__(self, cutoff, metric_value, example_counts):
         self.cutoff = cutoff
         self.metric_value = metric_value
+        self.example_counts = example_counts
 
-    def plot(self):
+    def plot_with_thresholds(self):
         fig, ax = plt.subplots()
         ax.plot(self.cutoff, self.metric_value)
-        ax.set_xlim([1., 0.])
-        ax.set_ylim([0., 1.10])
-        ax.set_xticks([i for i in reversed(np.arange(0, 1, 0.1))])
-        ax.set_yticks([i for i in np.arange(0, 1.01, 0.1)])
         ax.set_xlabel('Probability Estimates in Descending Order')
+        ax.set_ylabel('Metric Value')
+        ax.set_title('Performance Curve')
+        plt.show()
+
+    def plot_with_counts(self):
+        fig, ax = plt.subplots()
+        ax.plot(self.example_counts, self.metric_value)
+        ax.set_xlabel('Number of Evaluated Cases Ranked in Descending Order')
         ax.set_ylabel('Metric Value')
         ax.set_title('Performance Curve')
         plt.show()
@@ -51,6 +56,8 @@ def performance_curve(
             In case num_bins is not `None`, return upper bounds of the bins sorted in descending order.
         results: array of float, shape = [n_samples] or [n_bins]
             Performance values of metrics of interest when setting the cutoff at the corresponding y_score
+        counts: array of int, shape = [n_samples] or [n_bins]
+            Number of cases corresponding with the same position's y_score or metric_value
     """
 
     assert len(y_score) == len(y_true), 'Lengths of ground-truth and prediction arrays do not match.'
@@ -59,6 +66,8 @@ def performance_curve(
     result_size = num_bins if num_bins else size
     y_pred = np.zeros(size)
     results = list()
+    counts = list()
+    current_count = 0
 
     sorted_y_score, sorted_y_true = synchronize_sort(y_score, y_true)
 
@@ -71,8 +80,11 @@ def performance_curve(
             num_elements = len(binned_array[i])
             first_zero = (y_pred == 0).argmax()
             y_pred[first_zero:(first_zero + num_elements)] = 1
+            current_count += num_elements
         else:
             y_pred[i] = 1
+            current_count += 1
         results.append(metric(sorted_y_true, y_pred))
+        counts.append(current_count)
 
-    return PerformanceCurve(sorted_y_score, np.array(results))
+    return PerformanceCurve(sorted_y_score, np.array(results), np.array(counts))
