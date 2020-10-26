@@ -66,7 +66,7 @@ class PerformanceCurve(PerformanceCurveLike):
                 constraints. Otherwise, return the lowest score cutoff.
 
         Return:
-            The single highest/lowest score cutoff that satisfies all constraints
+            The single highest/lowest score cutoff that satisfies all constraints if exists. Otherwise, return None.
 
         Examples:
             `cutoff_at(0.80, '>=', count_lower_bound=100)` returns the lowest score cutoff that produces a performance
@@ -88,8 +88,8 @@ class PerformanceCurve(PerformanceCurveLike):
         if comparison_operator in ops:
             metric_ind = np.where(ops[comparison_operator](self.metric_value, performance_point))[0]
         else:
-            ValueError("comparison_operator argument could only take one of the following strings: "
-                       "'>', '<', '>=', '<=', '=='.")
+            raise ValueError("comparison_operator argument could only take one of the following strings: "
+                             "'>', '<', '>=', '<=', '=='.")
 
         bound_ind = np.array([i for i in range(len(self.metric_value))])
         if count_upper_bound is not None:
@@ -106,10 +106,13 @@ class PerformanceCurve(PerformanceCurveLike):
             bound_ind = np.intersect1d(bound_ind, cutoff_lower_bound_ind)
 
         result_ind = np.intersect1d(metric_ind, bound_ind)
-        if highest:
-            return self.score_cutoff[result_ind[-1]]
+        if len(result_ind) > 0:
+            if highest:
+                return self.score_cutoff[result_ind[0]]
+            else:
+                return self.score_cutoff[result_ind[-1]]
 
-        return self.score_cutoff[result_ind[0]]
+        return None
 
 
 class RandomPerformanceCurve(PerformanceCurveLike):
