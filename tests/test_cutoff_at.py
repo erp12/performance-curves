@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from performance_curves.performance_curve import performance_curve
 from sklearn.metrics import recall_score
