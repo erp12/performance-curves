@@ -45,8 +45,8 @@ class PerformanceCurve(PerformanceCurveLike):
             highest: bool = False
     ) -> float:
         """
-        Returns score threshold which meets a certain performance criteria given other optional counts and scores
-        constraints
+        Returns score threshold which meets a certain performance criterion given other optional counts and scores
+        criteria
 
         Arguments:
             performance_point: float
@@ -63,10 +63,10 @@ class PerformanceCurve(PerformanceCurveLike):
                 Lower bound of acceptable score thresholds
             highest: bool, default = False
                 If True, return the highest score threshold in case there are multiple values that satisfy all the
-                constraints. Otherwise, return the lowest score threshold.
+                criteria. Otherwise, return the lowest score threshold.
 
         Return:
-            The single highest/lowest score threshold that satisfies all constraints if exists. Otherwise, return None.
+            The single highest/lowest score threshold that satisfies all criteria if exists. Otherwise, return None.
 
         Examples:
             `threshold_at(0.80, '>=', count_lower_bound=100)` returns the lowest score threshold that produces a
