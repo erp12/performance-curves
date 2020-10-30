@@ -26,7 +26,7 @@ class PerformanceCurve(PerformanceCurveLike):
         super().__init__(performance_values, case_counts)
         self.score_thresholds = score_thresholds
 
-    def plot_with_cutoff(self):
+    def plot_with_thresholds(self):
         fig, ax = plt.subplots()
         ax.plot(self.score_thresholds, self.performance_values)
         ax.set_xlabel('Predicted Score (Probability Estimate) in Descending Order')
@@ -74,11 +74,6 @@ class PerformanceCurve(PerformanceCurveLike):
             `threshold_at(0.75, '<', threshold_upper_bound=0.25, highest=True)` returns the highest score threshold less
             than 0.25 that produces a performance value less than 0.75.
         """
-
-        assert len(self.performance_values) == len(self.case_counts), \
-            'Lengths of performance values array and counts array do not match.'
-        assert len(self.performance_values) == len(self.score_thresholds), \
-            'Lengths of performance values array and thresholds array do not match.'
 
         ops = {'>': operator.gt,
                '<': operator.lt,
@@ -181,4 +176,12 @@ def performance_curve(
         results.append(metric(sorted_y_true, y_pred))
         counts.append(current_count)
 
-    return PerformanceCurve(np.array(results), np.array(counts), sorted_y_score)
+    performance_values = np.array(results)
+    case_counts = np.array(counts)
+
+    assert len(performance_values) == len(case_counts), \
+        'Lengths of performance values array and counts array do not match.'
+    assert len(performance_values) == len(sorted_y_score), \
+        'Lengths of performance values array and scores array do not match.'
+
+    return PerformanceCurve(performance_values, case_counts, sorted_y_score)
