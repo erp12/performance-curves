@@ -8,44 +8,44 @@ from performance_curves.utils import synchronize_sort
 
 class PerformanceCurveLike:
     """Stores values of the x- and y-axis of the performance curve and allows plotting"""
-    def __init__(self, metric_value, example_counts):
-        self.metric_value = metric_value
-        self.example_counts = example_counts
+    def __init__(self, performance_values, case_counts):
+        self.performance_values = performance_values
+        self.case_counts = case_counts
 
     def plot(self):
         fig, ax = plt.subplots()
-        ax.plot(self.example_counts, self.metric_value)
-        ax.set_xlabel('Number of Evaluated Cases Ranked in Descending Order')
-        ax.set_ylabel('Metric Value')
+        ax.plot(self.case_counts, self.performance_values)
+        ax.set_xlabel('Number of Cases Ranked in Descending Order')
+        ax.set_ylabel('Performance Value')
         ax.set_title('Performance Curve')
         plt.show()
 
 
 class PerformanceCurve(PerformanceCurveLike):
-    def __init__(self, metric_value, example_counts, score_cutoff):
-        super().__init__(metric_value, example_counts)
-        self.score_cutoff = score_cutoff
+    def __init__(self, performance_values, case_counts, score_thresholds):
+        super().__init__(performance_values, case_counts)
+        self.score_thresholds = score_thresholds
 
     def plot_with_cutoff(self):
         fig, ax = plt.subplots()
-        ax.plot(self.score_cutoff, self.metric_value)
-        ax.set_xlabel('Probability Estimates in Descending Order')
-        ax.set_ylabel('Metric Value')
+        ax.plot(self.score_thresholds, self.performance_values)
+        ax.set_xlabel('Predicted Score (Probability Estimate) in Descending Order')
+        ax.set_ylabel('Performance Value')
         ax.set_title('Performance Curve')
         plt.show()
 
-    def cutoff_at(
+    def threshold_at(
             self,
             performance_point: float,
             comparison_operator: str,
             count_upper_bound: Optional[int] = None,
             count_lower_bound: Optional[int] = None,
-            cutoff_upper_bound: Optional[float] = None,
-            cutoff_lower_bound: Optional[float] = None,
+            threshold_upper_bound: Optional[float] = None,
+            threshold_lower_bound: Optional[float] = None,
             highest: bool = False
     ) -> float:
         """
-        Returns score cutoff which meets a certain performance criteria given other optional counts and scores
+        Returns score threshold which meets a certain performance criteria given other optional counts and scores
         constraints
 
         Arguments:
@@ -57,28 +57,28 @@ class PerformanceCurve(PerformanceCurveLike):
                 Maximum number of observations required to achieve the performance
             count_lower_bound: int, default = None
                 Minimum number of observations required to achieve the performance
-            cutoff_upper_bound: float, default = None
-                Upper bound of acceptable score cutoffs
-            cutoff_lower_bound: float, default = None
-                Lower bound of acceptable score cutoffs
+            threshold_upper_bound: float, default = None
+                Upper bound of acceptable score thresholds
+            threshold_lower_bound: float, default = None
+                Lower bound of acceptable score thresholds
             highest: bool, default = False
-                If True, return the highest score cutoff in case there are multiple values that satisfy all the
-                constraints. Otherwise, return the lowest score cutoff.
+                If True, return the highest score threshold in case there are multiple values that satisfy all the
+                constraints. Otherwise, return the lowest score threshold.
 
         Return:
-            The single highest/lowest score cutoff that satisfies all constraints if exists. Otherwise, return None.
+            The single highest/lowest score threshold that satisfies all constraints if exists. Otherwise, return None.
 
         Examples:
-            `cutoff_at(0.80, '>=', count_lower_bound=100)` returns the lowest score cutoff that produces a performance
-            of at least 0.80 and uses at least 100 observations.
-            `cutoff_at(0.75, '<', cutoff_upper_bound=0.25, highest=True)` returns the highest score cutoff less than
-            0.25 that produces a performance less than 0.75.
+            `threshold_at(0.80, '>=', count_lower_bound=100)` returns the lowest score threshold that produces a
+            performance of at least 0.80 and uses at least 100 observations.
+            `threshold_at(0.75, '<', threshold_upper_bound=0.25, highest=True)` returns the highest score threshold less
+            than 0.25 that produces a performance value less than 0.75.
         """
 
-        assert len(self.metric_value) == len(self.example_counts), \
+        assert len(self.performance_values) == len(self.case_counts), \
             'Lengths of performance values array and counts array do not match.'
-        assert len(self.metric_value) == len(self.score_cutoff), \
-            'Lengths of performance values array and probability estimates array do not match.'
+        assert len(self.performance_values) == len(self.score_thresholds), \
+            'Lengths of performance values array and thresholds array do not match.'
 
         ops = {'>': operator.gt,
                '<': operator.lt,
@@ -86,31 +86,31 @@ class PerformanceCurve(PerformanceCurveLike):
                '<=': operator.le,
                '==': operator.eq}
         if comparison_operator in ops:
-            metric_ind = np.where(ops[comparison_operator](self.metric_value, performance_point))[0]
+            metric_ind = np.where(ops[comparison_operator](self.performance_values, performance_point))[0]
         else:
             raise ValueError("comparison_operator argument could only take one of the following strings: "
                              "'>', '<', '>=', '<=', '=='.")
 
-        bound_ind = np.array([i for i in range(len(self.metric_value))])
+        bound_ind = np.array([i for i in range(len(self.performance_values))])
         if count_upper_bound is not None:
-            count_upper_bound_ind = np.where(self.example_counts <= count_upper_bound)[0]
+            count_upper_bound_ind = np.where(self.case_counts <= count_upper_bound)[0]
             bound_ind = np.intersect1d(bound_ind, count_upper_bound_ind)
         if count_lower_bound is not None:
-            count_lower_bound_ind = np.where(self.example_counts >= count_lower_bound)[0]
+            count_lower_bound_ind = np.where(self.case_counts >= count_lower_bound)[0]
             bound_ind = np.intersect1d(bound_ind, count_lower_bound_ind)
-        if cutoff_upper_bound is not None:
-            cutoff_upper_bound_ind = np.where(self.score_cutoff <= cutoff_upper_bound)[0]
-            bound_ind = np.intersect1d(bound_ind, cutoff_upper_bound_ind)
-        if cutoff_lower_bound is not None:
-            cutoff_lower_bound_ind = np.where(self.score_cutoff >= cutoff_lower_bound)[0]
-            bound_ind = np.intersect1d(bound_ind, cutoff_lower_bound_ind)
+        if threshold_upper_bound is not None:
+            threshold_upper_bound_ind = np.where(self.score_thresholds <= threshold_upper_bound)[0]
+            bound_ind = np.intersect1d(bound_ind, threshold_upper_bound_ind)
+        if threshold_lower_bound is not None:
+            threshold_lower_bound_ind = np.where(self.score_thresholds >= threshold_lower_bound)[0]
+            bound_ind = np.intersect1d(bound_ind, threshold_lower_bound_ind)
 
         result_ind = np.intersect1d(metric_ind, bound_ind)
         if len(result_ind) > 0:
             if highest:
-                return self.score_cutoff[result_ind[0]]
+                return self.score_thresholds[result_ind[0]]
             else:
-                return self.score_cutoff[result_ind[-1]]
+                return self.score_thresholds[result_ind[-1]]
 
         return None
 
@@ -130,14 +130,14 @@ def performance_curve(
     num_bins: Optional[int] = None
 ) -> PerformanceCurveLike:
     """
-    Computes performance value of a metric of interest at each probability estimate (or each upper bound of a range of
-    probability estimates in case of binning) given that they are sorted in descending order
+    Computes performance value of a metric of interest at each predicted score / probability estimate (or each upper
+    bound of a range of predicted scores in case of binning) given that they are sorted in descending order
 
     Arguments:
         y_true: 1d-array like
             Ground truth (correct) labels.
         y_score: 1d array-like
-            Probability estimates as returned by a classifier.
+            Predicted scores (probability estimates) as returned by a classifier.
         metric: callable method(s)
             Function(s) that assess a classifier's prediction error for specific purposes given ground truth and
             prediction (e.g.: sklearn.metrics.recall_score, sklearn.metrics.precision_score, etc).
@@ -146,11 +146,11 @@ def performance_curve(
 
     Return:
         results: array of float, shape = [n_samples] or [n_bins]
-            Performance values of metrics of interest when setting the score cutoff at the corresponding y_score
+            Performance values of metrics of interest when setting the score threshold at the corresponding y_score
         counts: array of int, shape = [n_samples] or [n_bins]
-            Number of cases corresponding with the same position's y_score or metric_value
+            Number of cases corresponding with the same position's y_score or performance_value
         sorted_y_score: array of float, shape = [n_samples] or [n_bins]
-            In case num_bins is `None`, return probability estimates of all data points sorted in descending order.
+            In case num_bins is `None`, return predicted scores of all data points sorted in descending order.
             In case num_bins is not `None`, return upper bounds of the bins sorted in descending order.
     """
 
