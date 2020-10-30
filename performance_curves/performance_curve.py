@@ -91,7 +91,7 @@ class PerformanceCurve(PerformanceCurveLike):
             raise ValueError("comparison_operator argument could only take one of the following strings: "
                              "'>', '<', '>=', '<=', '=='.")
 
-        bound_ind = np.array([i for i in range(len(self.performance_values))])
+        bound_ind = np.arange(len(self.performance_values))
         if count_upper_bound is not None:
             count_upper_bound_ind = np.where(self.case_counts <= count_upper_bound)[0]
             bound_ind = np.intersect1d(bound_ind, count_upper_bound_ind)
