@@ -26,6 +26,11 @@ class PerformanceCurve(PerformanceCurveLike):
         super().__init__(performance_values, case_counts)
         self.score_thresholds = score_thresholds
 
+        assert len(performance_values) == len(case_counts), \
+            'Lengths of performance values array and counts array do not match.'
+        assert len(performance_values) == len(score_thresholds), \
+            'Lengths of performance values array and scores array do not match.'
+
     def plot_with_thresholds(self):
         fig, ax = plt.subplots()
         ax.plot(self.score_thresholds, self.performance_values)
@@ -176,12 +181,4 @@ def performance_curve(
         results.append(metric(sorted_y_true, y_pred))
         counts.append(current_count)
 
-    performance_values = np.array(results)
-    case_counts = np.array(counts)
-
-    assert len(performance_values) == len(case_counts), \
-        'Lengths of performance values array and counts array do not match.'
-    assert len(performance_values) == len(sorted_y_score), \
-        'Lengths of performance values array and scores array do not match.'
-
-    return PerformanceCurve(performance_values, case_counts, sorted_y_score)
+    return PerformanceCurve(np.array(results), np.array(counts), sorted_y_score)
