@@ -3,7 +3,11 @@ from typing import Tuple
 import numpy as np
 
 
-def synchronize_sort(key: np.ndarray, dependent: np.ndarray, ascending=False) -> Tuple[np.ndarray, np.ndarray]:
+def synchronize_sort(
+        key: np.ndarray,
+        dependent: np.ndarray,
+        ascending=False
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Sort two arrays synchronously using the sorted indices of the key array
 

@@ -1,29 +1,38 @@
-import operator
+import random
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Callable, Optional
+from typing import Optional, Tuple
 
 from performance_curves.utils import synchronize_sort
+from performance_curves.metric import Metric
 
 
 class PerformanceCurveLike:
     """Stores values of the x- and y-axis of the performance curve and allows plotting"""
-    def __init__(self, performance_values, case_counts):
+    def __init__(self,
+                 performance_values: np.ndarray,
+                 case_counts: np.ndarray,
+                 metric: Metric):
         self.performance_values = performance_values
         self.case_counts = case_counts
+        self.metric = metric
 
     def plot(self):
         fig, ax = plt.subplots()
         ax.plot(self.case_counts, self.performance_values)
-        ax.set_xlabel('Number of Cases Ranked in Descending Order')
-        ax.set_ylabel('Performance Value')
+        ax.set_xlabel('Number of Cases')
+        ax.set_ylabel(self.metric.name)
         ax.set_title('Performance Curve')
         plt.show()
 
 
 class PerformanceCurve(PerformanceCurveLike):
-    def __init__(self, performance_values, case_counts, score_thresholds):
-        super().__init__(performance_values, case_counts)
+    def __init__(self,
+                 performance_values: np.ndarray,
+                 case_counts: np.ndarray,
+                 score_thresholds: np.ndarray,
+                 metric: Metric):
+        super().__init__(performance_values, case_counts, metric)
         self.score_thresholds = score_thresholds
 
         assert len(performance_values) == len(case_counts), \
@@ -34,99 +43,50 @@ class PerformanceCurve(PerformanceCurveLike):
     def plot_with_thresholds(self):
         fig, ax = plt.subplots()
         ax.plot(self.score_thresholds, self.performance_values)
-        ax.set_xlabel('Predicted Score (Probability Estimate) in Descending Order')
-        ax.set_ylabel('Performance Value')
+        ax.set_xlabel('Predicted Score (Probability Estimate)')
+        ax.set_ylabel(self.metric)
         ax.set_title('Performance Curve')
         plt.show()
 
-    def threshold_at(
-            self,
-            performance_point: float,
-            comparison_operator: str,
-            count_upper_bound: Optional[int] = None,
-            count_lower_bound: Optional[int] = None,
-            threshold_upper_bound: Optional[float] = None,
-            threshold_lower_bound: Optional[float] = None,
-            highest: bool = False
-    ) -> float:
-        """
-        Returns score threshold which meets a certain performance criterion given other optional counts and scores
-        criteria
+    def threshold_at(self, performance_point: float):
+        pass
 
-        Arguments:
-            performance_point: float
-                Baseline performance value to compare against
-            comparison_operator: str, valid options include '>', '<', '>=', '<=', and '=='
-                Operator type used to compare the actual performance values and user's desired performance baseline
-            count_upper_bound: int, default = None
-                Maximum number of observations required to achieve the performance
-            count_lower_bound: int, default = None
-                Minimum number of observations required to achieve the performance
-            threshold_upper_bound: float, default = None
-                Upper bound of acceptable score thresholds
-            threshold_lower_bound: float, default = None
-                Lower bound of acceptable score thresholds
-            highest: bool, default = False
-                If True, return the highest score threshold in case there are multiple values that satisfy all the
-                criteria. Otherwise, return the lowest score threshold.
 
-        Return:
-            The single highest/lowest score threshold that satisfies all criteria if exists. Otherwise, return None.
+# TODO: should this function stay in this script or the utils script?
+def _generate_performance_values(
+        y_true: np.ndarray,
+        rearranged_y_true: np.ndarray,
+        metric: Metric,
+        num_bins: Optional[int] = None,
+        binned_array: Optional[np.ndarray] = None
+) -> Tuple[np.ndarray, np.ndarray]:
 
-        Examples:
-            `threshold_at(0.80, '>=', count_lower_bound=100)` returns the lowest score threshold that produces a
-            performance of at least 0.80 and uses at least 100 observations.
-            `threshold_at(0.75, '<', threshold_upper_bound=0.25, highest=True)` returns the highest score threshold less
-            than 0.25 that produces a performance value less than 0.75.
-        """
+    size = len(y_true)
+    result_size = num_bins if num_bins else size
+    y_pred = np.zeros(size)
+    results = list()
+    counts = list()
+    current_count = 0
 
-        ops = {'>': operator.gt,
-               '<': operator.lt,
-               '>=': operator.ge,
-               '<=': operator.le,
-               '==': operator.eq}
-        if comparison_operator in ops:
-            metric_ind = np.where(ops[comparison_operator](self.performance_values, performance_point))[0]
+    for i in range(result_size):
+        if binned_array:
+            num_elements = len(binned_array[i])
+            first_zero = (y_pred == 0).argmax()
+            y_pred[first_zero:(first_zero + num_elements)] = 1
+            current_count += num_elements
         else:
-            raise ValueError("comparison_operator argument could only take one of the following strings: "
-                             "'>', '<', '>=', '<=', '=='.")
+            y_pred[i] = 1
+            current_count += 1
+        results.append(metric.func(rearranged_y_true, y_pred))
+        counts.append(current_count)
 
-        bound_ind = np.arange(len(self.performance_values))
-        if count_upper_bound is not None:
-            count_upper_bound_ind = np.where(self.case_counts <= count_upper_bound)[0]
-            bound_ind = np.intersect1d(bound_ind, count_upper_bound_ind)
-        if count_lower_bound is not None:
-            count_lower_bound_ind = np.where(self.case_counts >= count_lower_bound)[0]
-            bound_ind = np.intersect1d(bound_ind, count_lower_bound_ind)
-        if threshold_upper_bound is not None:
-            threshold_upper_bound_ind = np.where(self.score_thresholds <= threshold_upper_bound)[0]
-            bound_ind = np.intersect1d(bound_ind, threshold_upper_bound_ind)
-        if threshold_lower_bound is not None:
-            threshold_lower_bound_ind = np.where(self.score_thresholds >= threshold_lower_bound)[0]
-            bound_ind = np.intersect1d(bound_ind, threshold_lower_bound_ind)
-
-        result_ind = np.intersect1d(metric_ind, bound_ind)
-        if len(result_ind) > 0:
-            if highest:
-                return self.score_thresholds[result_ind[0]]
-            else:
-                return self.score_thresholds[result_ind[-1]]
-
-        return None
-
-
-class RandomPerformanceCurve(PerformanceCurveLike):
-    pass
-
-
-class PerfectPerformanceCurve(PerformanceCurveLike):
-    pass
+    return np.array(results), np.array(counts)
 
 
 def performance_curve(
     y_true: np.ndarray,
     y_score: np.ndarray,
-    metric: Callable[[np.ndarray, np.ndarray], float],
+    metric: Metric,
     num_bins: Optional[int] = None
 ) -> PerformanceCurveLike:
     """
@@ -138,9 +98,11 @@ def performance_curve(
             Ground truth (correct) labels.
         y_score: 1d array-like
             Predicted scores (probability estimates) as returned by a classifier.
-        metric: callable method(s)
-            Function(s) that assess a classifier's prediction error for specific purposes given ground truth and
-            prediction (e.g.: sklearn.metrics.recall_score, sklearn.metrics.precision_score, etc).
+        metric: custom metric class
+            Metric class that represents a metric used to assess a classifier's prediction error for specific purposes
+            given ground truth and prediction. This class's attributes include the metric name, its callable function
+            (e.g. sklearn.metrics.recall_score), and whether we should minimize or maximize it to obtain the best model
+            performance.
         num_bins: int, optional (default=None)
             Number of bins (or bucket) to divide the range of values into.
 
@@ -155,30 +117,44 @@ def performance_curve(
     """
 
     assert len(y_score) == len(y_true), 'Lengths of ground-truth and prediction arrays do not match.'
-
-    size = len(y_true)
-    result_size = num_bins if num_bins else size
-    y_pred = np.zeros(size)
-    results = list()
-    counts = list()
-    current_count = 0
-
     sorted_y_score, sorted_y_true = synchronize_sort(y_score, y_true)
 
     if num_bins:
         binned_array = np.array_split(sorted_y_score, num_bins)
         sorted_y_score = np.array([i[0] for i in binned_array])
+    else:
+        binned_array = None
 
-    for i in range(result_size):
-        if num_bins:
-            num_elements = len(binned_array[i])
-            first_zero = (y_pred == 0).argmax()
-            y_pred[first_zero:(first_zero + num_elements)] = 1
-            current_count += num_elements
-        else:
-            y_pred[i] = 1
-            current_count += 1
-        results.append(metric(sorted_y_true, y_pred))
-        counts.append(current_count)
+    results, counts = _generate_performance_values(y_true, sorted_y_true, metric, num_bins, binned_array)
 
-    return PerformanceCurve(np.array(results), np.array(counts), sorted_y_score)
+    return PerformanceCurve(results, counts, sorted_y_score, metric)
+
+
+def random_performance_curve(
+        y_true: np.ndarray,
+        metric: Metric,
+        num_bins: Optional[int] = None
+) -> PerformanceCurveLike:
+
+    idx = list(range(len(y_true)))
+    random.shuffle(idx)
+    random_y_true = np.array([y_true[i] for i in idx])
+    binned_array = np.array_split(random_y_true, num_bins) if num_bins else None
+
+    results, counts = _generate_performance_values(y_true, random_y_true, metric, num_bins, binned_array)
+
+    return PerformanceCurveLike(results, counts, metric)
+
+
+def perfect_performance_curve(
+        y_true: np.ndarray,
+        metric: Metric,
+        num_bins: Optional[int] = None
+) -> PerformanceCurveLike:
+
+    perfect_y_true = np.sort(y_true)[::-1]
+    binned_array = np.array_split(perfect_y_true, num_bins) if num_bins else None
+
+    results, counts = _generate_performance_values(y_true, perfect_y_true, metric, num_bins, binned_array)
+
+    return PerformanceCurveLike(results, counts, metric)
