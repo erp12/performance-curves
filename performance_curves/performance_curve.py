@@ -75,15 +75,18 @@ class RandomPerformanceCurve(PerformanceCurveLike):
                  y_true: np.ndarray,
                  metric: Metric,
                  num_trials: int = 1,
-                 num_bins: Optional[int] = None):
+                 num_bins: Optional[int] = None,
+                 random_seed: Optional[int] = None):
         self.y_true = y_true
         self.num_trials = num_trials
         self.num_bins = num_bins
         idxs = np.arange(len(self.y_true))
-        bin_sizes = get_bin_sizes(self.y_true, self.num_bins)
+        bin_sizes = get_bin_sizes(self.y_true, self.num_bins) if self.num_bins else None
 
         trials = []
         case_counts = None
+        if random_seed:
+            np.random.seed(random_seed)
         for _ in range(self.num_trials):
             np.random.shuffle(idxs)
             random_y_true = np.array([self.y_true[i] for i in idxs])
