@@ -113,7 +113,7 @@ def test_random_performance_curve():
     #
     # Whens
     #
-    x = RandomPerformanceCurve(y_true, RECALL, num_trials=3, random_state=1)
+    x = RandomPerformanceCurve(y_true, RECALL, num_trials=3, random_seed=1)
 
     #
     # Thens
