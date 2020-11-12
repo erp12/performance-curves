@@ -23,8 +23,6 @@ tox -e test-py36  # or test-py37 or test-py38
 ```
 
 ### TODO:
-- [ ] Code a perfect model
-- [ ] Code a random model
 - [ ] Create performance curve bundle (1 test set / 1 metric / multiple models)
 - [ ] Method to select best model for a given objective
 
