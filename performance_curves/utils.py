@@ -29,5 +29,6 @@ def synchronize_sort(
 
 
 def get_bin_sizes(arr: np.ndarray, num_bins: int) -> List[int]:
+    assert num_bins > 0, "Number of bins needs to be positive."
     score_bins = np.array_split(arr, num_bins)
     return [len(score_bins[i]) for i in np.arange(len(score_bins))]
