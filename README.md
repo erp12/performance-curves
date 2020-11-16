@@ -23,10 +23,8 @@ tox -e test-py36  # or test-py37 or test-py38
 ```
 
 ### TODO:
-- [ ] Code a perfect model
-- [ ] Code a random model
-- [ ] Write a streaming metric (to help optimize efficiency of not repeating the computation multiple times)
-- [ ] Write plotting functions (allow user to compare multiple models)
+- [ ] Create performance curve bundle (1 test set / 1 metric / multiple models)
+- [ ] Method to select best model for a given objective
 
 ### Questions
 - Do we want to allow multiple metrics in the same `performance_curve` function?

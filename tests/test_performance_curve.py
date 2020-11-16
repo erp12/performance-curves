@@ -1,62 +1,103 @@
 import numpy as np
 
-from sklearn.metrics import precision_score, recall_score, accuracy_score, roc_auc_score
-from performance_curves.performance_curve import performance_curve
+from performance_curves.performance_curve import PerformanceCurve, PerfectPerformanceCurve, \
+    RandomPerformanceCurve, _generate_performance_values
+from performance_curves.metric import RECALL, PRECISION, ACCURACY, F1
+
+
+def test_generate_performance_values():
+    # Given two arrays of equal length
+    y1 = np.array([1, 1, 0, 0, 1])
+    y2 = np.array([1, 1, 1, 0, 0])
+
+    r1 = _generate_performance_values(y1, RECALL)
+    r2 = _generate_performance_values(y1, PRECISION)
+    r3 = _generate_performance_values(y2, RECALL)
+    r4 = _generate_performance_values(y2, PRECISION)
+    r5 = _generate_performance_values(y1, ACCURACY, [3, 2])
+    r6 = _generate_performance_values(y2, F1, [2, 2, 1])
+
+    case_counts = np.arange(1, 6)
+    np.testing.assert_array_almost_equal(r1[0], np.array([0.333, 0.666, 0.666, 0.666, 1.]), decimal=3)
+    np.testing.assert_array_equal(r1[1], case_counts)
+
+    np.testing.assert_array_almost_equal(r2[0], np.array([1., 1., 0.666, 0.5, 0.6]), decimal=3)
+    np.testing.assert_array_equal(r2[1], case_counts)
+
+    np.testing.assert_array_almost_equal(r3[0], np.array([0.333, 0.666, 1., 1., 1.]), decimal=3)
+    np.testing.assert_array_almost_equal(r3[1], case_counts)
+
+    np.testing.assert_array_equal(r4[0], np.array([1., 1., 1., 0.75, 0.6]))
+    np.testing.assert_array_equal(r4[1], case_counts)
+
+    np.testing.assert_array_equal(r5[0], np.array([0.6, 0.6]))
+    np.testing.assert_array_equal(r5[1], np.array([3, 5]))
+
+    np.testing.assert_array_almost_equal(r6[0], np.array([0.8, 0.857, 0.75]), decimal=3)
+    np.testing.assert_array_equal(r6[1], np.array([2, 4, 5]))
 
 
 def test_performance_curve():
-    #
-    # Givens
-    #
+    # Given a true label array, a predicted probability score array (lower score means less likely to be positive) and
+    # a predicted point array (lower point means more likely to be positive) - all of equal length
+    y_true = np.array([1, 0, 1, 1, 0])
+    y_score = np.array([0.1, 0.4, 0.91, 0.8, 0.05])
+    y_point = np.array([3, 4, 1, 2, 5])
 
-    # two arrays of ground truth and probability estimates, correspondingly
-    y_true = np.array([0, 0, 1, 1, 0])
+    x1 = PerformanceCurve(y_true, y_score, PRECISION)
+    x2 = PerformanceCurve(y_true, y_score, RECALL)
+    x3 = PerformanceCurve(y_true, y_score, PRECISION, num_bins=3)
+    x4 = PerformanceCurve(y_true, y_point, RECALL, num_bins=2, order_descending=False)
+
+    case_counts = np.arange(1, 6)
+    np.testing.assert_array_almost_equal(x1.performance_values, np.array([1., 1., 0.666, 0.75, 0.6]), decimal=3)
+    np.testing.assert_array_equal(x1.case_counts, case_counts)
+
+    np.testing.assert_array_almost_equal(x2.performance_values, np.array([0.333, 0.666, 0.666, 1., 1.]), decimal=3)
+    np.testing.assert_array_equal(x2.case_counts, case_counts)
+
+    np.testing.assert_array_equal(x3.performance_values, np.array([1., 0.75, 0.6]))
+    np.testing.assert_array_equal(x3.case_counts, np.array([2, 4, 5]))
+
+    np.testing.assert_array_equal(x4.performance_values, np.array([1., 1.]))
+    np.testing.assert_array_equal(x4.case_counts, np.array([3, 5]))
+
+    # Given two label/score arrays of different lengths
+    y_true = np.array([1, 0, 1])
     y_score = np.array([0.1, 0.4, 0.91, 0.8, 0.05])
 
-    #
-    # Whens
-    #
+    with np.testing.assert_raises(AssertionError):
+        PerformanceCurve(y_true, y_score, RECALL)
 
-    # measuring the performance curve of all data points
-    x1 = performance_curve(y_true, y_score, precision_score)
-    x2 = performance_curve(y_true, y_score, recall_score)
-    x3 = performance_curve(y_true, y_score, accuracy_score)
-    x4 = performance_curve(y_true, y_score, roc_auc_score)
 
-    #
-    # Thens
-    #
-    sorted_y_true = np.array([0.91, 0.8, 0.4, 0.1, 0.05])
-    np.testing.assert_array_equal(x1.cutoff, sorted_y_true)
-    np.testing.assert_array_equal(x2.cutoff, sorted_y_true)
-    np.testing.assert_array_equal(x3.cutoff, sorted_y_true)
-    np.testing.assert_array_equal(x4.cutoff, sorted_y_true)
+def test_perfect_performance_curve():
+    # Given a true label array
+    y_true = np.array([0, 0, 1, 1, 0])
 
-    np.testing.assert_array_almost_equal(x1.metric_value, np.array([1., 1., 0.666, 0.5, 0.4]), decimal=3)
-    np.testing.assert_array_almost_equal(x2.metric_value, np.array([0.5, 1., 1., 1., 1.]), decimal=3)
-    np.testing.assert_array_almost_equal(x3.metric_value, np.array([0.8, 1, 0.8, 0.6, 0.4]), decimal=3)
-    np.testing.assert_array_almost_equal(x4.metric_value, np.array([0.75, 1, 0.833, 0.666, 0.5]), decimal=3)
+    x1 = PerfectPerformanceCurve(y_true, PRECISION)
+    x2 = PerfectPerformanceCurve(y_true, RECALL)
+    x3 = PerfectPerformanceCurve(y_true, ACCURACY, num_bins=2)
 
-    #
-    # Whens
-    #
+    np.testing.assert_array_almost_equal(x1.performance_values, np.array([1., 1., 0.666, 0.5, 0.4]), decimal=3)
+    np.testing.assert_array_equal(x1.case_counts, np.arange(1, 6))
 
-    # dividing the data points into 3 bins and measuring the performance curve
-    x1 = performance_curve(y_true, y_score, precision_score, num_bins=3)
-    x2 = performance_curve(y_true, y_score, recall_score, num_bins=3)
-    x3 = performance_curve(y_true, y_score, accuracy_score, num_bins=3)
-    x4 = performance_curve(y_true, y_score, roc_auc_score, num_bins=3)
+    np.testing.assert_array_equal(x2.performance_values, np.array([0.5, 1., 1., 1., 1.]))
+    np.testing.assert_array_equal(x2.case_counts, np.arange(1, 6))
 
-    #
-    # Thens
-    #
-    sorted_y_true_ub = np.array([0.91, 0.4, 0.05])
-    np.testing.assert_array_equal(x1.cutoff, sorted_y_true_ub)
-    np.testing.assert_array_equal(x2.cutoff, sorted_y_true_ub)
-    np.testing.assert_array_equal(x3.cutoff, sorted_y_true_ub)
-    np.testing.assert_array_equal(x4.cutoff, sorted_y_true_ub)
+    np.testing.assert_array_equal(x3.performance_values, np.array([0.8, 0.4]))
+    np.testing.assert_array_equal(x3.case_counts, np.array([3, 5]))
 
-    np.testing.assert_array_almost_equal(x1.metric_value, np.array([1., 0.5, 0.4]), decimal=3)
-    np.testing.assert_array_almost_equal(x2.metric_value, np.array([1., 1., 1.]), decimal=3)
-    np.testing.assert_array_almost_equal(x3.metric_value, np.array([1., 0.6, 0.4]), decimal=3)
-    np.testing.assert_array_almost_equal(x4.metric_value, np.array([1., 0.666, 0.5]), decimal=3)
+    with np.testing.assert_raises(ValueError):
+        x1.plot([0.8])
+
+
+def test_random_performance_curve():
+    # Given a true label array
+    y_true = np.array([0, 0, 1, 1, 0])
+
+    x = RandomPerformanceCurve(y_true, RECALL, num_trials=3, random_seed=1)
+
+    np.testing.assert_array_almost_equal(x.performance_values, np.array([0.5, 0.5, 0.666, 0.666, 1.]), decimal=3)
+    np.testing.assert_array_equal(x.case_counts, np.arange(1, 6))
+    with np.testing.assert_raises(ValueError):
+        x.plot([0.7, 0.2])
