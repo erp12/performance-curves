@@ -52,8 +52,9 @@ class PerformanceCurve(NonRandomPerformanceCurve):
                  order_descending: bool = True):
         self.y_true = y_true
         self.y_score = y_score
+        self.order_descending = order_descending
         assert len(self.y_score) == len(self.y_true), "Lengths of ground-truth and prediction arrays do not match."
-        sorted_y_score, sorted_y_true = synchronize_sort(self.y_score, self.y_true, descending=order_descending)
+        sorted_y_score, sorted_y_true = synchronize_sort(self.y_score, self.y_true, descending=self.order_descending)
         super().__init__(sorted_y_true, metric, num_bins)
 
     def threshold_at(self, performance_point: float) -> List[Tuple[float, int]]:
@@ -75,8 +76,7 @@ class RandomPerformanceCurve(PerformanceCurveLike):
                  y_true: np.ndarray,
                  metric: Metric,
                  num_trials: int = 1,
-                 num_bins: Optional[int] = None,
-                 random_seed: Optional[int] = None):
+                 num_bins: Optional[int] = None):
         self.y_true = y_true
         self.num_trials = num_trials
         self.num_bins = num_bins
@@ -85,8 +85,6 @@ class RandomPerformanceCurve(PerformanceCurveLike):
 
         trials = []
         case_counts = None
-        if random_seed:
-            np.random.seed(random_seed)
         for _ in range(self.num_trials):
             np.random.shuffle(idxs)
             random_y_true = np.array([self.y_true[i] for i in idxs])

@@ -95,7 +95,8 @@ def test_random_performance_curve():
     # Given a true label array
     y_true = np.array([0, 0, 1, 1, 0])
 
-    x = RandomPerformanceCurve(y_true, RECALL, num_trials=3, random_seed=1)
+    np.random.seed(1)
+    x = RandomPerformanceCurve(y_true, RECALL, num_trials=3)
 
     np.testing.assert_array_almost_equal(x.performance_values, np.array([0.5, 0.5, 0.666, 0.666, 1.]), decimal=3)
     np.testing.assert_array_equal(x.case_counts, np.arange(1, 6))
