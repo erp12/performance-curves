@@ -13,7 +13,7 @@ class PerformanceCurveBundle:
                  order_descending: bool = True,
                  make_perfect: bool = True,
                  make_random: bool = True,
-                 num_trials: Optional[int] = 1):
+                 num_trials: int = 1):
         self.y_true = y_true
         self.method_scores = method_scores
         self.metric = metric
