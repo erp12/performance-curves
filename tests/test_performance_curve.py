@@ -69,6 +69,13 @@ def test_performance_curve():
     with np.testing.assert_raises(AssertionError):
         PerformanceCurve(y_true, y_score, RECALL)
 
+    # Given long arrays without binning
+    y_true = np.random.choice([0, 1], size=10000, p=[.1, .9])
+    y_score = np.random.rand(10000)
+
+    with np.testing.assert_warns(RuntimeWarning):
+        PerformanceCurve(y_true, y_score, RECALL)
+
 
 def test_perfect_performance_curve():
     # Given a true label array
@@ -102,3 +109,8 @@ def test_random_performance_curve():
     np.testing.assert_array_equal(x.case_counts, np.arange(1, 6))
     with np.testing.assert_raises(ValueError):
         x.plot([0.7, 0.2])
+
+    # Given a long array with no binning
+    y_true = np.random.choice([0, 1], size=10000, p=[.1, .9])
+    with np.testing.assert_warns(RuntimeWarning):
+        RandomPerformanceCurve(y_true, RECALL, num_trials=1)

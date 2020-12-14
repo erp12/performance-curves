@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Optional, Tuple, List
@@ -17,16 +18,16 @@ class PerformanceCurveLike:
         self.case_counts = case_counts
         self.metric = metric
 
-    def plot(self, target_performance_values: Optional[List[float]] = None):
+    def plot(self, percentage_x=False, target_performance_values: Optional[List[float]] = None):
         if target_performance_values is not None and not isinstance(self, PerformanceCurve):
             raise ValueError("Cannot annotate target performance values of " + type(self).__name__)
         fig, ax = plt.subplots()
-        ax.plot(self.case_counts, self.performance_values)
+        ax.plot(self.case_counts / self.case_counts[-1] if percentage_x else self.case_counts, self.performance_values)
+        ax.set_xlabel("Percentage of Total Cases" if percentage_x else "Number of Cases")
+        ax.set_ylabel(self.metric.name)
         if not target_performance_values:
             # @todo Put annotations at target_performance_values using self.threshold_at
             pass
-        ax.set_xlabel("Number of Cases")
-        ax.set_ylabel(self.metric.name)
         plt.show()
 
 
@@ -80,6 +81,7 @@ class RandomPerformanceCurve(PerformanceCurveLike):
         self.y_true = y_true
         self.num_trials = num_trials
         self.num_bins = num_bins
+
         idxs = np.arange(len(self.y_true))
         bin_sizes = get_bin_sizes(self.y_true, self.num_bins) if self.num_bins else None
 
@@ -100,6 +102,10 @@ def _generate_performance_values(
         metric: Metric,
         bin_sizes: Optional[List[int]] = None
 ) -> Tuple[np.ndarray, np.ndarray]:
+    if bin_sizes is None and len(rearranged_y_true) >= 10000:
+        warnings.warn("Given the number of cases you have, consider turning `num_bins` on to reduce runtime.",
+                      RuntimeWarning)
+
     size = len(rearranged_y_true)
     result_size = len(bin_sizes) if bin_sizes else size
     y_pred = np.zeros(size)
