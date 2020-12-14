@@ -32,17 +32,20 @@ class PerformanceCurveBundle:
         if make_random:
             self.random_curve = RandomPerformanceCurve(self.y_true, self.metric, num_trials, self.num_bins)
 
-    def plot(self):
+    def plot(self, percentage_x=False):
+        def create_x_axis_values(raw_counts: np.ndarray):
+            x_values = raw_counts / raw_counts[-1] if percentage_x else raw_counts
+            return x_values
         fig, ax = plt.subplots()
         for curve_name, curve in self.curves.items():
-            ax.plot(curve.case_counts, curve.performance_values, label=curve_name)
+            ax.plot(create_x_axis_values(curve.case_counts), curve.performance_values, label=curve_name)
         if self.random_curve:
-            ax.plot(self.random_curve.case_counts, self.random_curve.performance_values,
+            ax.plot(create_x_axis_values(self.random_curve.case_counts), self.random_curve.performance_values,
                     label="random", linestyle="dashed", color="r")
         if self.perfect_curve:
-            ax.plot(self.perfect_curve.case_counts, self.perfect_curve.performance_values,
+            ax.plot(create_x_axis_values(self.perfect_curve.case_counts), self.perfect_curve.performance_values,
                     label="perfect", linestyle="dashdot", color="k")
-        ax.set_xlabel("Number of Cases")
+        ax.set_xlabel("Percentage of Total Cases" if percentage_x else "Number of Cases")
         ax.set_ylabel(self.metric.name)
         plt.legend()
         plt.show()

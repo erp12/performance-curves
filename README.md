@@ -24,8 +24,6 @@ tox -e test-py36  # or test-py37 or test-py38
 
 ### TODO:
 - [ ] Method to select best model for a given objective
-- [ ] Allow x-axis to be percentage of population
-- [ ] Throw warning when binning is off and number of data points is greater than 10,000
 
 ### Questions (need to be revisited)
 - Do we want to allow multiple metrics in the same `performance_curve` function?
