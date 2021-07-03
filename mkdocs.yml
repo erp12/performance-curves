@@ -1,5 +1,5 @@
 site_name: Performance Curves
-#site_url:
+site_url: https://erp12.github.io/performance-curves/
 site_description: The ideal way to evaluate binary classifiers.
 site_author: Eddie Pantridge
 
@@ -16,11 +16,13 @@ theme:
     primary: teal
     accent: purple
 
+extra_css:
+  - stylesheets/extra.css
+
 nav:
   - Home: README.md
   - API: api.md
-  - About:
-      - License: LICENSE.md
+  - License: LICENSE.md
 
 # @todo examples.md
 # @todo release-notes.md
@@ -31,10 +33,14 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          setup_commands:
-            - import sys
-            - sys.path.append("docs")
           selection:
-            new_path_syntax: yes
+            filters:
+              - "!^_"  # exclude all members starting with _
+              - "^__init__$"  # but always include __init__ modules and methods
+          rendering:
+            show_root_heading: yes
+            show_object_full_path: no
+            show_signature_annotations: no
       watch:
+        - docs_src
         - performance_curves

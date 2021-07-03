@@ -1,0 +1,12 @@
+[flake8]
+max-line-length = 140
+docstring-convention = google
+exclude =
+    .git,
+    __pycache__,
+    docs,
+    docs_src,
+    build,
+    dist
+per-file-ignores =
+    tests/*:D
