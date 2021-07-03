@@ -1,6 +1,6 @@
 # Performance Curves
 
-## Rationale 
+## Rationale
 
 ## Getting Started
 
@@ -21,3 +21,19 @@ of Python using the one of the variants.
 ```
 tox -e test-py36  # or test-py37 or test-py38
 ```
+
+### TODO:
+- [ ] Rewrite developer guide
+- [ ] Contributing guide
+- [ ] Release notes
+- [ ] Examples
+- [ ] Create performance curve bundle (1 test set / 1 metric / multiple models)
+- [ ] Method to select best model for a given objective
+- [ ] Linter in unit tests
+
+### Questions
+- Do we want to allow multiple metrics in the same `performance_curve` function?
+    - Pro: save computation time, since given the same model, no matter what the metric is, we still use the same `y_pred` and `y_score`
+- Do we want to allow multiple models in the same `performance_curve` function?
+    - Con: doesn't save any computation time (cause there's nothing to be reused across models)
+  

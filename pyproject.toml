@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "performance-curves"
+version = "0.1.0"
+description = ""
+authors = ["erp12 <eddie.pantridge@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+scikit-learn = "^0.24"
+numpy = "^1.13.3" # Keep in sync with scikit-learn
+pyrsistent = "^0.17.3"
+matplotlib = "^3.4.2"
+mypy = "^0.910"
+multipledispatch = "^0.6.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+black = "^21.6b0"
+flake8 = "^3.9.2"
+flake8-docstrings = "^1.6.0"
+mypy = "^0.910"
+mkdocs = "^1.2.1"
+mkdocs-material = "^7.1.9"
+mkdocstrings = "^0.15.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
