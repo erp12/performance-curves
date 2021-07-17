@@ -8,5 +8,6 @@ exclude =
     docs_src,
     build,
     dist
+ignore = E203
 per-file-ignores =
     tests/*:D
