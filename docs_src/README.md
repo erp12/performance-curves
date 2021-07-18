@@ -11,7 +11,7 @@ What performance curve requires:
 What performance curve offers:
 - Overview of a method's performance across a range of decision boundaries
 - An intuitive visualization to address the early retrieval problem, where the correctness of only a small number of highest-ranked predictions is of interest
-- No required knowledge of the relative mis-classification costs
+- No required knowledge of the relative misclassification costs
 - Robustness against imbalanced data problem  
 - Means to compare models to each other, as well as with random and perfect classifiers over a range of operating conditions on a single dataset
 
@@ -28,7 +28,7 @@ Use threshold-free measures! Performance curve provides a visual representation 
 
 ### Problem 2: 
 
-Most of the widely used ranking metrics (i.e. metrics based on how well a method **ranks** data cases), such as area under receiver operating characteristic (AUROC) curve, or precision-recall (PR) curve, do not explicitly translate to business requirements. For example, given limited human capacity in reviewing positive predictions of a statistical method, neither AUROC nor PR curves indicate the method's performance when only a small number of positively predicted cases get investigated. Similarly, given a fixed precision or recall, both metrics do not describe the exact number of data cases that must be reviewed to achieve the desired performance. Additionally, both ROC and PR curves omit the specific threshold information from the graphic, therefore being irrelevant for choosing a threshold value in case threshold is indeed necessary.
+Most of the widely used ranking metrics (i.e. metrics based on how well a method ranks data cases), such as area under receiver operating characteristic (AUROC) curve, or precision-recall (PR) curve, do not explicitly translate to business requirements. For example, given limited human capacity in reviewing positive predictions of a statistical method, neither AUROC nor PR curves indicate the method's performance when only a small number of positively predicted cases get investigated. Similarly, given a fixed precision or recall, both metrics do not describe the exact number of data cases that must be reviewed to achieve the desired performance. Additionally, both ROC and PR curves omit the specific threshold information from the graphic, therefore being irrelevant for choosing a threshold value in case threshold is indeed necessary.
 
 *Solution*: 
 
@@ -37,7 +37,10 @@ Most of the widely used ranking metrics (i.e. metrics based on how well a method
 AUROC or AUPRC or any scalar performance measures gives an apparently definitive answer to which method is better. However, it often happens that one method is superior to another in some circumstances and inferior in others, and these widely used scalar performance measures give no assistance in identifying the circumstances in which a particular method is superior.
 
 *Solution*:
-[] (@TODO: create an example of 2 models on a dataset where model B's AUROC > model A's AUROC but we want to use model A's instead since it addresses the early retrieval problem better.)
+@TODO: create an example of 2 models on a dataset where model B's AUROC > model A's AUROC but we want to use model A's instead since it addresses the early retrieval problem better.
+
+### Problem 4: 
+@TODO: example of user-defined metric over a range of operating conditions
 
 ## Getting Started
 
@@ -64,7 +67,6 @@ tox -e test-py36  # or test-py37 or test-py38
 - [ ] Contributing guide
 - [ ] Release notes
 - [ ] Examples
-- [ ] Create performance curve bundle (1 test set / 1 metric / multiple models)
 - [ ] Method to select best model for a given objective
 - [ ] Linter in unit tests
 - [ ] Account for the variability of the model with respect to the metrics
